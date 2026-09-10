@@ -36,6 +36,30 @@ from src import (
 
 load_dotenv()
 
+
+def _hydrate_env_from_secrets() -> None:
+    """Let Streamlit secrets stand in for a local `.env` file.
+
+    Streamlit Community Cloud has no `.env`, so anything set in the app's
+    secrets UI is copied into the environment where the rest of the app
+    already looks for it. Only the names SP2PY actually reads are copied,
+    and a real environment variable (or `.env` entry) always wins.
+    """
+    names = {spec.key_env for spec in providers.SPECS.values() if spec.key_env}
+    names.update({"OPENAI_MODEL", "OPENAI_BASE_URL", "SP2PY_PROVIDER"})
+    try:
+        secrets = st.secrets
+        for name in names:
+            value = secrets.get(name)
+            if isinstance(value, str) and value and name not in os.environ:
+                os.environ[name] = value
+    except Exception:
+        # No secrets configured -- the sidebar still accepts a pasted key.
+        return
+
+
+_hydrate_env_from_secrets()
+
 # --------------------------------------------------------------------------
 # Page config & constants
 # --------------------------------------------------------------------------

@@ -116,6 +116,40 @@ provider needs no key at all.)
 2. Open a terminal (`` Ctrl+` ``) and run the setup commands above.
 3. Run `streamlit run app.py`; VS Code shows a clickable `localhost` link.
 
+## Deploying to Streamlit Community Cloud
+
+The repo is deploy-ready: `requirements.txt` pins the dependencies,
+`.python-version` pins the interpreter, and `.streamlit/config.toml`
+carries the theme.
+
+1. Push `main` to GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with
+   GitHub.
+3. **Create app → Deploy a public app from GitHub**, then fill in:
+   - Repository: `gangulisubhajit/sp2py`
+   - Branch: `main`
+   - Main file path: `app.py`
+4. *(Optional)* Under **Advanced settings → Secrets**, paste the entries
+   from [`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example)
+   for the provider(s) you want preloaded. Skip this and users just paste
+   a key into the sidebar instead.
+5. **Deploy.** The first build takes a couple of minutes; after that every
+   push to `main` redeploys automatically.
+
+Two things behave differently on the hosted app:
+
+- **The *Claude (subscription)* provider is unavailable.** It shells out to
+  the Claude Code CLI, which isn't installed on Community Cloud, so the
+  sidebar shows it as unavailable. Use an API-key provider there.
+- **History and feedback notes are ephemeral.** They live in `data/*.json`
+  on the container's disk, which resets whenever the app reboots or
+  redeploys. Swap `src/history_store.py` for a real database if you need
+  the audit trail to survive.
+
+A public Community Cloud app is readable by anyone with the link. Don't
+put secrets in your secrets file that you wouldn't want an unauthenticated
+visitor spending — a visitor can drive whatever key you preload.
+
 ## Using it
 
 1. Click 📎 in the chat box and attach a stored procedure (or open
