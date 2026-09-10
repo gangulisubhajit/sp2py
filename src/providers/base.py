@@ -78,6 +78,11 @@ class ProviderSpec:
     key_label: str = "API key"
     key_env: str = ""
     supports_base_url: bool = False
+    #: Substrings of model ids that cannot accept *custom* tools, and so
+    #: can't run this agent. Groq's "compound" systems are the case that
+    #: matters: they're chat models with their own built-in tools, and
+    #: they reject a `tools` array with a 400.
+    no_custom_tools: tuple[str, ...] = ()
 
 
 class Provider(ABC):
@@ -150,6 +155,16 @@ def is_chat_model(model_id: str) -> bool:
     """Whether a model id looks like something we can hold a conversation with."""
     lowered = (model_id or "").lower()
     return bool(lowered) and not any(m in lowered for m in NON_CHAT_MODEL_MARKERS)
+
+
+def accepts_custom_tools(model_id: str, spec: ProviderSpec) -> bool:
+    """Whether a model can be given this agent's tools.
+
+    The agent is nothing but tool calls, so a model that rejects a
+    `tools` array is unusable here however good it otherwise is.
+    """
+    lowered = (model_id or "").lower()
+    return not any(m.lower() in lowered for m in spec.no_custom_tools)
 
 
 def native_content(message: dict, provider_key: str):

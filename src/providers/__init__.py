@@ -17,7 +17,15 @@ backend means adding a module here and one entry in `SPECS`.
 from __future__ import annotations
 
 from .anthropic_api import ANTHROPIC_SPEC, AnthropicProvider
-from .base import Provider, ProviderError, ProviderSpec, StreamResult, ToolCall
+from .base import (
+    Provider,
+    ProviderError,
+    ProviderSpec,
+    StreamResult,
+    ToolCall,
+    accepts_custom_tools,
+    is_chat_model,
+)
 from .claude_code import CLAUDE_CODE_SPEC, ClaudeCodeProvider
 from .claude_code import is_available as claude_code_available
 from .openai_compat import GROQ_SPEC, OPENAI_SPEC, OpenAICompatProvider
@@ -33,6 +41,8 @@ __all__ = [
     "spec_for",
     "build",
     "claude_code_available",
+    "accepts_custom_tools",
+    "is_chat_model",
 ]
 
 SPECS: dict[str, ProviderSpec] = {

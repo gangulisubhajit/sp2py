@@ -400,6 +400,9 @@ MOCK_MODELS = [
     {"id": "text-embedding-3-small", "active": True},   # embeddings
     {"id": "meta-llama/llama-prompt-guard-2-86m", "active": True},  # classifier
     {"id": "playai-tts", "active": True},               # speech
+    # Chat models that reject a custom `tools` array (built-in tools only).
+    {"id": "groq/compound", "active": True},
+    {"id": "groq/compound-mini", "active": True},
 ]
 
 

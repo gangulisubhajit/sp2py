@@ -55,6 +55,14 @@ bundled list is only a fallback. Non-chat models (speech, embeddings,
 safety classifiers) are filtered out automatically, and if your current
 selection has been retired the app moves you to one that still exists.
 
+**The model must support custom tool calling.** The agent does everything
+through tools — reading your procedure, writing the module, saving rules —
+so a model that rejects a `tools` array can't run it at all. On Groq that
+rules out `groq/compound` and `groq/compound-mini`, which are agentic
+bundles that only run their *own* built-in tools; they're excluded from
+the dropdown. `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` and the
+`openai/gpt-oss-*` models all work.
+
 > ⚠️ **A claude.ai Pro/Max subscription does *not* include Anthropic API
 > credits.** They are billed separately. If you have a subscription and
 > want to use it, pick **Claude (subscription)** — not *Claude (API key)*.

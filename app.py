@@ -312,6 +312,15 @@ def _sidebar_model_settings() -> None:
         else:
             st.session_state[model_state(picked)] = choice
 
+        # Catch a known-incompatible model here rather than letting the
+        # first message fail with a 400.
+        if not providers.accepts_custom_tools(model_for(picked), spec):
+            st.error(
+                f"`{model_for(picked)}` doesn't accept custom tool calling, "
+                "which this agent needs. Pick another model.",
+                icon="🚫",
+            )
+
         _render_model_refresh(picked, spec)
 
         if spec.supports_base_url:

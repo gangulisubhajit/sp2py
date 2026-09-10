@@ -21,6 +21,7 @@ from .base import (
     ProviderSpec,
     StreamResult,
     ToolCall,
+    accepts_custom_tools,
     is_chat_model,
 )
 
@@ -64,6 +65,10 @@ GROQ_SPEC = ProviderSpec(
     key_label="Groq API key",
     key_env="GROQ_API_KEY",
     supports_base_url=False,
+    # Groq's "compound" systems are agentic bundles with their own
+    # built-in tools; passing a custom `tools` array returns
+    # "tool calling is not supported with this model" (400).
+    no_custom_tools=("groq/compound",),
 )
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -72,6 +77,32 @@ GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 def supports_temperature(model: str) -> bool:
     """Whether `model` accepts a `temperature` parameter."""
     return not _REASONING_MODEL_RE.match(model or "")
+
+
+_TOOL_ERROR_MARKERS = (
+    "tool calling is not supported",
+    "does not support tools",
+    "tools is not supported",
+    "tool_choice is not supported",
+    "function calling is not supported",
+)
+
+
+def _is_tool_support_error(detail: str) -> bool:
+    lowered = (detail or "").lower()
+    return any(marker in lowered for marker in _TOOL_ERROR_MARKERS)
+
+
+def _tool_capable_hint(label: str) -> str:
+    """Name concrete models known to accept custom tools."""
+    if label == "Groq":
+        return (
+            " — `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, "
+            "`openai/gpt-oss-120b` or `openai/gpt-oss-20b` all work. "
+            "Groq's `compound` systems do not: they only run their own "
+            "built-in tools"
+        )
+    return " — click *Refresh models* in the sidebar to see what's available"
 
 
 def friendly_error(exc: Exception, model: str = "", label: str = "The API") -> str:
@@ -103,7 +134,15 @@ def friendly_error(exc: Exception, model: str = "", label: str = "The API") -> s
             "URL if you're routing through a proxy."
         )
     if isinstance(exc, openai.BadRequestError):
-        return f"{label} rejected the request (400): {getattr(exc, 'message', exc)}"
+        detail = str(getattr(exc, "message", exc))
+        if _is_tool_support_error(detail):
+            return (
+                f"`{model}` can't do custom tool calling, which this agent needs "
+                "for every step — reading your procedure, writing the module, "
+                "saving rules.\n\n"
+                f"Pick a tool-capable model instead{_tool_capable_hint(label)}."
+            )
+        return f"{label} rejected the request (400): {detail}"
     if isinstance(exc, openai.APIStatusError):
         return f"{label} returned an error ({exc.status_code}): {getattr(exc, 'message', exc)}"
     return f"The model call failed: {exc}"
@@ -151,12 +190,18 @@ class OpenAICompatProvider(Provider):
             # Groq returns `active`; OpenAI omits it entirely.
             if getattr(model, "active", True) is False:
                 continue
-            if is_chat_model(model_id):
-                ids.append(model_id)
+            if not is_chat_model(model_id):
+                continue
+            # A model that won't take a `tools` array can't run this agent,
+            # so offering it would only produce a 400 later.
+            if not accepts_custom_tools(model_id, self.spec):
+                continue
+            ids.append(model_id)
 
         if not ids:
             raise ProviderError(
-                f"{self.spec.label} returned no chat-capable models for this key."
+                f"{self.spec.label} returned no models this agent can use with "
+                "this key (it needs one that accepts custom tool calling)."
             )
         return sorted(ids)
 

@@ -13,6 +13,7 @@ wiring is covered offline with fakes.
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 
 import pytest
 
@@ -183,6 +184,83 @@ def test_listing_drops_retired_models(mock_api):
     """Groq marks retired ids inactive; those are exactly the ones that 404."""
     found = make("openai", mock_api).list_models()
     assert "qwen/qwen3-32b" not in found
+
+
+def test_listing_excludes_models_that_reject_custom_tools(mock_api, monkeypatch):
+    """The agent is all tool calls, so a built-in-tools-only model is unusable.
+
+    Groq's base URL is pinned to the real service, so the filter is
+    exercised by lending Groq's exclusion rules to the mock-backed client.
+    """
+    provider = make("openai", mock_api)
+    monkeypatch.setattr(
+        provider, "spec", replace(provider.spec, no_custom_tools=("groq/compound",))
+    )
+
+    found = provider.list_models()
+    assert "llama-3.3-70b-versatile" in found
+    assert "groq/compound" not in found
+    assert "groq/compound-mini" not in found
+
+
+def test_listing_keeps_those_models_when_nothing_is_excluded(mock_api):
+    """Sanity check that the previous test proves the filter, not the mock."""
+    found = make("openai", mock_api).list_models()
+    assert "groq/compound" in found
+
+
+@pytest.mark.parametrize(
+    "model,expected",
+    [
+        ("llama-3.3-70b-versatile", True),
+        ("llama-3.1-8b-instant", True),
+        ("openai/gpt-oss-120b", True),
+        ("groq/compound", False),
+        ("groq/compound-mini", False),
+        ("GROQ/COMPOUND", False),  # matching must be case-insensitive
+    ],
+)
+def test_custom_tool_capability_by_model(model, expected):
+    assert providers.accepts_custom_tools(model, providers.SPECS["groq"]) is expected
+
+
+def test_other_providers_block_nothing_by_default():
+    for key in ("openai", "anthropic", "claude_code"):
+        assert providers.SPECS[key].no_custom_tools == ()
+
+
+def test_tool_support_400_names_working_models():
+    """The raw Groq message is opaque; the app must say what to pick instead."""
+    import openai
+
+    httpx = getattr(openai._base_client, "httpx2", None) or openai._base_client.httpx
+    request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    body = {"error": {"message": "tool calling is not supported with this model"}}
+    response = httpx.Response(400, request=request, json=body)
+    exc = openai.BadRequestError(body["error"]["message"], response=response, body=body)
+
+    from src.providers import openai_compat
+
+    message = openai_compat.friendly_error(exc, "groq/compound", "Groq")
+    assert "llama-3.3-70b-versatile" in message
+    assert "compound" in message
+    assert "400" not in message, "the raw status code isn't useful here"
+
+
+def test_unrelated_400_is_passed_through_verbatim():
+    import openai
+
+    httpx = getattr(openai._base_client, "httpx2", None) or openai._base_client.httpx
+    request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    body = {"error": {"message": "max_tokens must be positive"}}
+    response = httpx.Response(400, request=request, json=body)
+    exc = openai.BadRequestError(body["error"]["message"], response=response, body=body)
+
+    from src.providers import openai_compat
+
+    message = openai_compat.friendly_error(exc, "llama-3.3-70b-versatile", "Groq")
+    assert "max_tokens must be positive" in message
+    assert "tool calling" not in message
 
 
 def test_anthropic_listing_works(mock_api):
