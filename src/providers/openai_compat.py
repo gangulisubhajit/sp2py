@@ -51,16 +51,20 @@ GROQ_SPEC = ProviderSpec(
         "Groq retires models often — use *Refresh models* if one 404s."
     ),
     auth="api_key",
-    # Groq's production text models. This list is only a fallback: the
-    # sidebar replaces it with a live lookup as soon as a key is present,
-    # because these ids change more often than the app is released.
+    # Only a fallback: the sidebar replaces this with a live lookup as
+    # soon as a key is present. Groq both retires models and gates them
+    # by account tier, so no static list is right for every key --
+    # gpt-oss leads because it appears on the broadest range of accounts,
+    # including free tier, where the Llama models often aren't provisioned.
     models=[
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b",
+        "qwen/qwen3.6-27b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
     ],
-    default_model="llama-3.3-70b-versatile",
+    default_model="openai/gpt-oss-120b",
     credentials_url="https://console.groq.com/keys",
     key_label="Groq API key",
     key_env="GROQ_API_KEY",
@@ -97,10 +101,10 @@ def _tool_capable_hint(label: str) -> str:
     """Name concrete models known to accept custom tools."""
     if label == "Groq":
         return (
-            " — `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, "
-            "`openai/gpt-oss-120b` or `openai/gpt-oss-20b` all work. "
-            "Groq's `compound` systems do not: they only run their own "
-            "built-in tools"
+            " — `openai/gpt-oss-120b` and `openai/gpt-oss-20b` are the safest "
+            "bets. Groq's `compound` systems won't work: they only run their "
+            "own built-in tools. Click *Refresh models* to see exactly what "
+            "your key can reach"
         )
     return " — click *Refresh models* in the sidebar to see what's available"
 
@@ -116,9 +120,9 @@ def friendly_error(exc: Exception, model: str = "", label: str = "The API") -> s
         return f"This key isn't allowed to use `{model}` (403). Pick a different model."
     if isinstance(exc, openai.NotFoundError):
         hint = (
-            "Groq retires models regularly, so a name that worked before can "
-            "stop existing. Click *Refresh models* in the sidebar to load the "
-            "list your key can actually use."
+            "Groq gates models by account tier and retires them regularly, so "
+            "a documented model may simply not be on your account. Click "
+            "*Refresh models* in the sidebar to load what your key can reach."
             if label == "Groq"
             else "Pick another model in the sidebar, or click *Refresh models*."
         )

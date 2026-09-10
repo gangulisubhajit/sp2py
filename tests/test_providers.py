@@ -242,7 +242,7 @@ def test_tool_support_400_names_working_models():
     from src.providers import openai_compat
 
     message = openai_compat.friendly_error(exc, "groq/compound", "Groq")
-    assert "llama-3.3-70b-versatile" in message
+    assert "openai/gpt-oss-120b" in message, "it must name a model that works"
     assert "compound" in message
     assert "400" not in message, "the raw status code isn't useful here"
 
@@ -294,7 +294,9 @@ def test_model_not_found_error_points_at_the_refresh_button():
 
     message = openai_compat.friendly_error(exc, "qwen/qwen3-32b", "Groq")
     assert "Refresh models" in message
-    assert "retires models" in message
+    # Both causes matter: an id can be retired, or simply not on your tier.
+    assert "account tier" in message
+    assert "retires them" in message
 
 
 def test_subscription_provider_falls_back_to_its_static_list():

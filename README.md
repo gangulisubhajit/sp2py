@@ -46,7 +46,7 @@ key and model choice, so you can switch mid-project to compare.
 | **OpenAI** | API key | `gpt-4o`, `gpt-4.1`, `o4-mini`, … Supports a custom base URL for proxies/Azure gateways. |
 | **Claude (subscription)** | Your claude.ai login | **No API key and no separate bill** — runs through the Claude Code CLI you're already signed in to. Local, single-user only. |
 | **Claude (API key)** | Anthropic API key | `claude-opus-5`, `claude-sonnet-5`, … Pay-as-you-go. |
-| **Groq** | API key | Very fast open-weight models (Llama 3.x, gpt-oss). Has a free tier. |
+| **Groq** | API key | Very fast open-weight models (gpt-oss, Qwen, Llama). Has a free tier, but **gates models by account tier** — run *Refresh models*. |
 
 **If a model 404s**, click **🔄 Refresh models** in the sidebar. It asks the
 provider which models your key can actually use and rewrites the dropdown
@@ -68,8 +68,9 @@ through tools — reading your procedure, writing the module, saving rules —
 so a model that rejects a `tools` array can't run it at all. On Groq that
 rules out `groq/compound` and `groq/compound-mini`, which are agentic
 bundles that only run their *own* built-in tools; they're excluded from
-the dropdown. `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` and the
-`openai/gpt-oss-*` models all work.
+the dropdown. The `openai/gpt-oss-*` models are the safest bet on Groq —
+they're provisioned on the widest range of accounts, including free tier,
+where the Llama models often aren't available at all.
 
 > ⚠️ **A claude.ai Pro/Max subscription does *not* include Anthropic API
 > credits.** They are billed separately. If you have a subscription and
