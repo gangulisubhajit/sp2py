@@ -112,6 +112,45 @@ class Provider(ABC):
         """
         raise NotImplementedError
 
+    def list_models(self) -> list[str]:
+        """Chat-capable model ids this credential can actually use.
+
+        Providers that expose a models endpoint override this. Hard-coded
+        lists go stale as vendors retire models -- Groq in particular
+        rotates them often -- so the UI prefers a live list when it can
+        get one and falls back to :attr:`ProviderSpec.models` otherwise.
+
+        Raises :class:`ProviderError` if the lookup fails.
+        """
+        return list(self.spec.models)
+
+
+# Model ids that are real but useless here: speech, embeddings, images,
+# moderation, safety classifiers. Matched as substrings, case-insensitive.
+NON_CHAT_MODEL_MARKERS = (
+    "whisper",
+    "tts",
+    "orpheus",
+    "prompt-guard",
+    "safeguard",
+    "embed",
+    "moderation",
+    "dall-e",
+    "davinci",
+    "babbage",
+    "image",
+    "realtime",
+    "audio",
+    "transcribe",
+    "rerank",
+)
+
+
+def is_chat_model(model_id: str) -> bool:
+    """Whether a model id looks like something we can hold a conversation with."""
+    lowered = (model_id or "").lower()
+    return bool(lowered) and not any(m in lowered for m in NON_CHAT_MODEL_MARKERS)
+
 
 def native_content(message: dict, provider_key: str):
     """Return a message's provider-native content, if it matches `provider_key`.

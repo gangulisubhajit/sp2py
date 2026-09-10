@@ -27,7 +27,15 @@ from typing import Any, Iterator
 
 import anthropic
 
-from .base import Provider, ProviderError, ProviderSpec, StreamResult, ToolCall, native_content
+from .base import (
+    Provider,
+    ProviderError,
+    ProviderSpec,
+    StreamResult,
+    ToolCall,
+    is_chat_model,
+    native_content,
+)
 
 ANTHROPIC_SPEC = ProviderSpec(
     key="anthropic",
@@ -182,6 +190,19 @@ class AnthropicProvider(Provider):
             # anyone fronting the API with a gateway.
             kwargs["base_url"] = base_url
         self.client = anthropic.Anthropic(**kwargs)
+
+    def list_models(self) -> list[str]:
+        """Ask the API which Claude models this key can use."""
+        try:
+            page = self.client.models.list()
+        except Exception as exc:
+            raise ProviderError(friendly_error(exc, self.model)) from exc
+
+        ids = [getattr(m, "id", "") for m in page]
+        ids = [i for i in ids if is_chat_model(i)]
+        if not ids:
+            raise ProviderError("Anthropic returned no models for this key.")
+        return ids
 
     def iter_turn(
         self,

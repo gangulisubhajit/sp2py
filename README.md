@@ -46,7 +46,14 @@ key and model choice, so you can switch mid-project to compare.
 | **OpenAI** | API key | `gpt-4o`, `gpt-4.1`, `o4-mini`, … Supports a custom base URL for proxies/Azure gateways. |
 | **Claude (subscription)** | Your claude.ai login | **No API key and no separate bill** — runs through the Claude Code CLI you're already signed in to. Local, single-user only. |
 | **Claude (API key)** | Anthropic API key | `claude-opus-5`, `claude-sonnet-5`, … Pay-as-you-go. |
-| **Groq** | API key | Very fast open-weight models (Llama, Kimi, Qwen, gpt-oss). Has a free tier. |
+| **Groq** | API key | Very fast open-weight models (Llama 3.x, gpt-oss). Has a free tier. |
+
+**If a model 404s**, click **🔄 Refresh models** in the sidebar. It asks the
+provider which models your key can actually use and rewrites the dropdown
+— vendors retire model ids between releases (Groq especially), so the
+bundled list is only a fallback. Non-chat models (speech, embeddings,
+safety classifiers) are filtered out automatically, and if your current
+selection has been retired the app moves you to one that still exists.
 
 > ⚠️ **A claude.ai Pro/Max subscription does *not* include Anthropic API
 > credits.** They are billed separately. If you have a subscription and

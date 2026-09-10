@@ -160,6 +160,75 @@ def test_tools_are_sent_in_anthropic_schema(session, mock_api):
 
 
 # --------------------------------------------------------------------------
+# Live model listing (the fix for retired model ids)
+# --------------------------------------------------------------------------
+
+
+def test_openai_compatible_listing_filters_non_chat_models(mock_api):
+    """Speech, embedding and classifier models must not reach the dropdown."""
+    found = make("openai", mock_api).list_models()
+
+    assert "mock-model" in found
+    assert "llama-3.3-70b-versatile" in found
+    for junk in (
+        "whisper-large-v3",
+        "text-embedding-3-small",
+        "meta-llama/llama-prompt-guard-2-86m",
+        "playai-tts",
+    ):
+        assert junk not in found, f"{junk} should have been filtered out"
+
+
+def test_listing_drops_retired_models(mock_api):
+    """Groq marks retired ids inactive; those are exactly the ones that 404."""
+    found = make("openai", mock_api).list_models()
+    assert "qwen/qwen3-32b" not in found
+
+
+def test_anthropic_listing_works(mock_api):
+    found = make("anthropic", mock_api).list_models()
+    assert "claude-opus-5" in found
+
+
+def test_listing_failure_raises_provider_error(mock_api):
+    provider = make("openai", mock_api)
+    provider.client.api_key = ""  # force the 401 path
+    with pytest.raises(providers.ProviderError):
+        provider.list_models()
+
+
+def test_bundled_groq_models_are_current_production_ids():
+    """Guards against the stale-list bug: no known-retired ids in the fallback."""
+    retired = {"moonshotai/kimi-k2-instruct", "qwen/qwen3-32b", "mixtral-8x7b-32768",
+               "llama2-70b-4096", "gemma-7b-it"}
+    assert not (set(providers.SPECS["groq"].models) & retired)
+
+
+def test_model_not_found_error_points_at_the_refresh_button():
+    import openai
+
+    httpx = getattr(openai._base_client, "httpx2", None) or openai._base_client.httpx
+    request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    response = httpx.Response(404, request=request, json={"error": {"message": "no"}})
+    exc = openai.NotFoundError("no", response=response, body=None)
+
+    from src.providers import openai_compat
+
+    message = openai_compat.friendly_error(exc, "qwen/qwen3-32b", "Groq")
+    assert "Refresh models" in message
+    assert "retires models" in message
+
+
+def test_subscription_provider_falls_back_to_its_static_list():
+    """The CLI picks the model; there is no endpoint to query."""
+    available, _ = claude_code.is_available()
+    if not available:
+        pytest.skip("Claude Code CLI not available here")
+    provider = providers.build("claude_code")
+    assert provider.list_models() == providers.SPECS["claude_code"].models
+
+
+# --------------------------------------------------------------------------
 # Claude Agent SDK (subscription) -- wiring, offline
 # --------------------------------------------------------------------------
 

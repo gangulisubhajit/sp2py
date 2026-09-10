@@ -214,6 +214,56 @@ def provider_ready() -> tuple[bool, str]:
     return True, ""
 
 
+def live_models_state(provider_key: str) -> str:
+    return f"live_models_{provider_key}"
+
+
+def models_for(provider_key: str) -> list[str]:
+    """Model options to offer: the live list once fetched, else the bundled one."""
+    live = st.session_state.get(live_models_state(provider_key))
+    if live:
+        return live
+    return list(providers.SPECS[provider_key].models)
+
+
+def _render_model_refresh(provider_key: str, spec) -> None:
+    """A button to replace the bundled model list with a live one.
+
+    Vendors retire model ids between releases -- Groq especially -- so a
+    hard-coded list eventually 404s. This asks the provider what the key
+    can actually use.
+    """
+    if spec.auth == "subscription":
+        return  # the CLI decides; there is no models endpoint to query
+
+    live = st.session_state.get(live_models_state(provider_key))
+    caption = f"{len(live)} models loaded from {spec.label}" if live else ""
+
+    if st.button("🔄 Refresh models", width="stretch", key=f"refresh_models_{provider_key}",
+                 disabled=not api_key_for(provider_key),
+                 help="Ask the provider which models this key can use"):
+        try:
+            found = providers.build(
+                provider_key,
+                model_for(provider_key),
+                api_key_for(provider_key),
+                st.session_state.base_url if spec.supports_base_url else "",
+            ).list_models()
+        except providers.ProviderError as exc:
+            st.error(str(exc), icon="🚨")
+        else:
+            st.session_state[live_models_state(provider_key)] = found
+            # If the selected model no longer exists, move to one that does.
+            if model_for(provider_key) not in found:
+                fallback = spec.default_model if spec.default_model in found else found[0]
+                st.session_state[model_state(provider_key)] = fallback
+                st.toast(f"`{fallback}` selected — the previous model is gone.", icon="🔄")
+            st.rerun()
+
+    if caption:
+        st.caption(caption)
+
+
 def _sidebar_model_settings() -> None:
     ready, reason = provider_ready()
     label = "⚙️ Model & provider" + ("" if ready else "  ⚠️")
@@ -249,10 +299,11 @@ def _sidebar_model_settings() -> None:
 
         # Deliberately unkeyed: with a key, the widget's remembered value
         # would outrank `index`, so a model set anywhere else (env var,
-        # provider switch) could never take effect.
+        # provider switch, a live refresh) could never take effect.
+        available = models_for(picked)
         current_model = model_for(picked)
-        options = spec.models + ["custom…"]
-        index = spec.models.index(current_model) if current_model in spec.models else len(spec.models)
+        options = available + ["custom…"]
+        index = available.index(current_model) if current_model in available else len(available)
         choice = st.selectbox("Model", options, index=index)
         if choice == "custom…":
             st.session_state[model_state(picked)] = st.text_input(
@@ -260,6 +311,8 @@ def _sidebar_model_settings() -> None:
             )
         else:
             st.session_state[model_state(picked)] = choice
+
+        _render_model_refresh(picked, spec)
 
         if spec.supports_base_url:
             st.session_state.base_url = st.text_input(

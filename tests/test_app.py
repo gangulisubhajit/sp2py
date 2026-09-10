@@ -186,6 +186,44 @@ def test_general_correction_is_saved_and_listed_in_the_sidebar(app):
 
 
 # --------------------------------------------------------------------------
+# Model list refresh
+# --------------------------------------------------------------------------
+
+
+def test_refresh_models_loads_the_live_list(app):
+    refresh = [b for b in app.sidebar.button if "Refresh models" in b.label]
+    assert refresh, "the refresh control should be present"
+    assert not refresh[0].disabled, "it should be enabled once a key is set"
+
+    refresh[0].click().run()
+    assert_clean(app, "refresh models")
+
+    live = app.session_state["live_models_openai"]
+    assert "mock-model" in live
+    assert "whisper-large-v3" not in live, "non-chat models must be filtered"
+
+
+def test_refresh_replaces_a_retired_model_selection(app, mock_api):
+    """A model that no longer exists should be swapped for one that does."""
+    app.session_state["model_openai"] = "qwen/qwen3-32b"  # inactive in the mock
+    app.run()
+
+    [b for b in app.sidebar.button if "Refresh models" in b.label][0].click().run()
+    assert_clean(app, "refresh after retirement")
+
+    chosen = app.session_state["model_openai"]
+    assert chosen != "qwen/qwen3-32b"
+    assert chosen in app.session_state["live_models_openai"]
+
+
+def test_refresh_is_disabled_without_a_key():
+    at = AppTest.from_file(APP, default_timeout=120)
+    at.run()
+    refresh = [b for b in at.sidebar.button if "Refresh models" in b.label]
+    assert refresh and refresh[0].disabled
+
+
+# --------------------------------------------------------------------------
 # Failure handling
 # --------------------------------------------------------------------------
 

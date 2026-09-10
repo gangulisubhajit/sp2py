@@ -15,7 +15,14 @@ from typing import Any, Iterator
 import openai
 from openai import OpenAI
 
-from .base import Provider, ProviderError, ProviderSpec, StreamResult, ToolCall
+from .base import (
+    Provider,
+    ProviderError,
+    ProviderSpec,
+    StreamResult,
+    ToolCall,
+    is_chat_model,
+)
 
 # Reasoning / o-series models reject `temperature` (and several other
 # sampling params) with a 400. Detect them by name so the same code path
@@ -38,15 +45,19 @@ OPENAI_SPEC = ProviderSpec(
 GROQ_SPEC = ProviderSpec(
     key="groq",
     label="Groq",
-    blurb="Very fast open-weight models. Free-tier API key from console.groq.com.",
+    blurb=(
+        "Very fast open-weight models. Free-tier API key from console.groq.com. "
+        "Groq retires models often — use *Refresh models* if one 404s."
+    ),
     auth="api_key",
+    # Groq's production text models. This list is only a fallback: the
+    # sidebar replaces it with a live lookup as soon as a key is present,
+    # because these ids change more often than the app is released.
     models=[
         "llama-3.3-70b-versatile",
         "llama-3.1-8b-instant",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
-        "moonshotai/kimi-k2-instruct",
-        "qwen/qwen3-32b",
     ],
     default_model="llama-3.3-70b-versatile",
     credentials_url="https://console.groq.com/keys",
@@ -73,10 +84,14 @@ def friendly_error(exc: Exception, model: str = "", label: str = "The API") -> s
     if isinstance(exc, openai.PermissionDeniedError):
         return f"This key isn't allowed to use `{model}` (403). Pick a different model."
     if isinstance(exc, openai.NotFoundError):
-        return (
-            f"The model `{model}` doesn't exist or isn't available to this key (404). "
-            "Pick another model in the sidebar."
+        hint = (
+            "Groq retires models regularly, so a name that worked before can "
+            "stop existing. Click *Refresh models* in the sidebar to load the "
+            "list your key can actually use."
+            if label == "Groq"
+            else "Pick another model in the sidebar, or click *Refresh models*."
         )
+        return f"The model `{model}` isn't available to this key (404). {hint}"
     if isinstance(exc, openai.RateLimitError):
         return (
             f"{label} rate-limited the request (429). You may be out of quota or "
@@ -117,6 +132,33 @@ class OpenAICompatProvider(Provider):
         if base_url:
             kwargs["base_url"] = base_url
         self.client = OpenAI(**kwargs)
+
+    def list_models(self) -> list[str]:
+        """Ask the endpoint which models this key can use.
+
+        Both OpenAI and Groq serve `GET /models`. The response includes
+        speech, embedding and safety models that are useless for chat, so
+        those are filtered out; Groq also marks retired models inactive.
+        """
+        try:
+            page = self.client.models.list()
+        except Exception as exc:
+            raise ProviderError(friendly_error(exc, self.model, self.spec.label)) from exc
+
+        ids = []
+        for model in page:
+            model_id = getattr(model, "id", "") or ""
+            # Groq returns `active`; OpenAI omits it entirely.
+            if getattr(model, "active", True) is False:
+                continue
+            if is_chat_model(model_id):
+                ids.append(model_id)
+
+        if not ids:
+            raise ProviderError(
+                f"{self.spec.label} returned no chat-capable models for this key."
+            )
+        return sorted(ids)
 
     def iter_turn(
         self,

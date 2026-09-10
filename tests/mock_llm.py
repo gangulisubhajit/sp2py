@@ -385,10 +385,58 @@ async def anthropic_messages(request: Request):
     )
 
 
+# --------------------------------------------------------------------------
+# Model listings
+# --------------------------------------------------------------------------
+
+# Deliberately mixed: chat models, a retired one, and non-chat models the
+# app must filter out (speech, embeddings, safety classifiers).
+MOCK_MODELS = [
+    {"id": "mock-model", "active": True},
+    {"id": "llama-3.3-70b-versatile", "active": True},
+    {"id": "openai/gpt-oss-120b", "active": True},
+    {"id": "qwen/qwen3-32b", "active": False},          # retired
+    {"id": "whisper-large-v3", "active": True},         # speech
+    {"id": "text-embedding-3-small", "active": True},   # embeddings
+    {"id": "meta-llama/llama-prompt-guard-2-86m", "active": True},  # classifier
+    {"id": "playai-tts", "active": True},               # speech
+]
+
+
+async def list_models(request: Request):
+    """Both SDKs GET /v1/models, so branch on which auth header arrived."""
+    if request.headers.get("x-api-key"):
+        return JSONResponse(
+            {
+                "data": [
+                    {"type": "model", "id": "claude-opus-5", "display_name": "Claude Opus 5"},
+                    {"type": "model", "id": "claude-sonnet-5", "display_name": "Claude Sonnet 5"},
+                ],
+                "has_more": False,
+                "first_id": "claude-opus-5",
+                "last_id": "claude-sonnet-5",
+            }
+        )
+
+    if not request.headers.get("authorization", "").startswith("Bearer "):
+        return JSONResponse({"error": {"message": "missing key"}}, status_code=401)
+
+    return JSONResponse(
+        {
+            "object": "list",
+            "data": [
+                {"object": "model", "created": 1, "owned_by": "mock", **m}
+                for m in MOCK_MODELS
+            ],
+        }
+    )
+
+
 app = Starlette(
     routes=[
         Route("/v1/chat/completions", chat_completions, methods=["POST"]),
         Route("/v1/messages", anthropic_messages, methods=["POST"]),
+        Route("/v1/models", list_models, methods=["GET"]),
     ]
 )
 
