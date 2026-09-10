@@ -1,0 +1,4 @@
+# Test-only dependencies. The offline mock OpenAI server uses starlette and
+# uvicorn, which already ship as Streamlit dependencies.
+-r requirements.txt
+pytest>=8.0

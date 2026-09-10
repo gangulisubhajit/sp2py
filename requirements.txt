@@ -1,0 +1,14 @@
+streamlit>=1.38.0
+pandas>=2.2.0
+openpyxl>=3.1.2
+plotly>=5.22.0
+python-dotenv>=1.0.1
+
+# Providers. OpenAI's client also serves Groq, which is API-compatible.
+openai>=1.40.0
+anthropic>=1.4.0
+
+# Optional: only needed for the "Claude (subscription)" provider, which
+# runs through the Claude Code CLI instead of an API key. Everything else
+# works without it.
+claude-agent-sdk>=0.2.152

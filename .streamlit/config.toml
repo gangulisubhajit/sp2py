@@ -1,0 +1,16 @@
+[theme]
+base = "dark"
+primaryColor = "#6d5efc"
+backgroundColor = "#0d1017"
+secondaryBackgroundColor = "#151a23"
+textColor = "#e6edf3"
+font = "sans serif"
+codeFont = "monospace"
+
+[server]
+# Stored procedures are text; 20MB is plenty and keeps a stray upload from
+# eating memory. Individual files are further capped in the app itself.
+maxUploadSize = 20
+
+[browser]
+gatherUsageStats = false

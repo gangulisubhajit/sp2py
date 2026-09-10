@@ -1,0 +1,19 @@
+# Normalise line endings so the repo stays LF regardless of who clones it.
+# Without this, editing on Windows can rewrite whole files as CRLF and turn
+# a one-line change into a full-file diff.
+* text=auto eol=lf
+
+# Explicit for the file types in this project.
+*.py    text eol=lf
+*.sql   text eol=lf
+*.md    text eol=lf
+*.toml  text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.html  text eol=lf
+
+# Binary: never touch these.
+*.xlsx  binary
+*.png   binary
+*.jpg   binary
+*.ico   binary
