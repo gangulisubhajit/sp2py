@@ -125,10 +125,16 @@ carries the theme.
 1. Push `main` to GitHub.
 2. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with
    GitHub.
-3. **Create app → Deploy a public app from GitHub**, then fill in:
+3. **Create app → Deploy from GitHub**, then fill in:
    - Repository: `gangulisubhajit/sp2py`
    - Branch: `main`
    - Main file path: `app.py`
+
+   The repo is private, so if it doesn't appear in the picker, use
+   **Grant access to private repositories** (or *Authorize Streamlit* on
+   GitHub) and reload the page. Free-tier accounts are limited in how
+   many private-repo apps they can host; making the repo public lifts
+   that, at the cost of publishing the source.
 4. *(Optional)* Under **Advanced settings → Secrets**, paste the entries
    from [`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example)
    for the provider(s) you want preloaded. Skip this and users just paste
