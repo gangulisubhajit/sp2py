@@ -6,6 +6,16 @@ problem is your environment, your credentials, or the app itself:
 
     python doctor.py
 
+To ask each provider which models your key can actually use -- the
+authoritative answer when a model 404s:
+
+    python doctor.py --models
+
+That reads keys from the environment, so pass one inline if you normally
+type it into the sidebar:
+
+    GROQ_API_KEY=gsk_... python doctor.py --models
+
 Exits non-zero if nothing is usable, so it also works in CI.
 """
 
@@ -145,7 +155,64 @@ def check_samples() -> bool:
     return True
 
 
+def list_live_models() -> int:
+    """Ask every keyed provider what models it will actually serve.
+
+    This is the ground truth when a model 404s: vendor docs lag behind
+    the API, and access is often gated by account tier, so only the key
+    itself can say what it can reach.
+    """
+    print("SP2PY live model lookup")
+    try:
+        from src import providers
+    except Exception as exc:
+        line(BAD, "import src.providers", str(exc))
+        return 1
+
+    asked = False
+    for key in providers.PROVIDER_KEYS:
+        spec = providers.SPECS[key]
+        if spec.auth == "subscription":
+            continue
+
+        api_key = os.getenv(spec.key_env, "")
+        section(f"{spec.label}  ({spec.key_env})")
+        if not api_key:
+            line(WARN, "skipped", f"{spec.key_env} not set in this shell")
+            continue
+
+        asked = True
+        try:
+            found = providers.build(key, spec.default_model, api_key).list_models()
+        except Exception as exc:
+            line(BAD, "lookup failed", str(exc))
+            continue
+
+        line(OK, f"{len(found)} usable model(s)")
+        for model_id in found:
+            suffix = "   <- app default" if model_id == spec.default_model else ""
+            print(f"         {model_id}{suffix}")
+
+        if spec.default_model not in found:
+            line(WARN, f"default '{spec.default_model}' is NOT available",
+                 "pick one of the models listed above")
+
+    if not asked:
+        print()
+        print("No provider keys found in this shell. Pass one inline, e.g.:")
+        print("  GROQ_API_KEY=gsk_... python doctor.py --models")
+        return 1
+
+    print()
+    print("Any model listed above will work. Select it in the sidebar after")
+    print("clicking 'Refresh models', or via the Model box's 'custom...' option.")
+    return 0
+
+
 def main() -> int:
+    if "--models" in sys.argv:
+        return list_live_models()
+
     print("SP2PY doctor")
     results = [
         check_python(),
@@ -160,7 +227,7 @@ def main() -> int:
     if all(results):
         print("All checks passed. Start the app with:  streamlit run app.py")
         return 0
-    print("Some checks failed — see [FAIL] lines above.")
+    print("Some checks failed - see [FAIL] lines above.")
     return 1
 
 

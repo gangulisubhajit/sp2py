@@ -55,6 +55,14 @@ bundled list is only a fallback. Non-chat models (speech, embeddings,
 safety classifiers) are filtered out automatically, and if your current
 selection has been retired the app moves you to one that still exists.
 
+**To see exactly what your key can reach**, ask it directly — this is
+the ground truth when a model 404s, since vendor docs lag the API and
+access is often gated by account tier:
+
+```bash
+GROQ_API_KEY=gsk_... python doctor.py --models
+```
+
 **The model must support custom tool calling.** The agent does everything
 through tools — reading your procedure, writing the module, saving rules —
 so a model that rejects a `tools` array can't run it at all. On Groq that
