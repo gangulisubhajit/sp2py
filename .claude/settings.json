@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./.venv/Scripts/python.exe -c \"import docx; print\\('python-docx present'\\)\")",
+      "Bash(./.venv/Scripts/python.exe -m pip install -q python-docx)",
+      "Bash(./.venv/Scripts/python.exe -c \"import docx; print\\('python-docx ready'\\)\")",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(PYTHONIOENCODING=utf-8 ./.venv/Scripts/python.exe -c ' *)",
+      "Bash(cat)",
+      "Bash(./.venv/Scripts/python.exe \"C:/Users/subha/AppData/Local/Temp/claude/c--Users-subha-Downloads-sp2py-app-sp2py-app/f3409e89-f057-42a3-9d63-5bd806453dbc/scratchpad/md2docx.py\")",
+      "Bash(echo \"[]\")",
+      "Bash(rm -rf __TRACKED_VAR__/take1)",
+      "Bash(mkdir -p __TRACKED_VAR__/take1)",
+      "Bash(python -c ' *)",
+      "Bash(PYTHONPATH=__TRACKED_VAR__/pylib ./.venv/Scripts/python.exe __TRACKED_VAR__/edit.py __TRACKED_VAR__/take1 __TRACKED_VAR__/edit_test)",
+      "Bash(curl -s -m 5 http://localhost:8501/_stcore/health)",
+      "Bash(rm -rf __TRACKED_VAR__/take2 __TRACKED_VAR__/take3 __TRACKED_VAR__/edit_test)",
+      "Bash(mkdir -p __TRACKED_VAR__/take3)",
+      "Bash(PYTHONPATH=__TRACKED_VAR__/pylib ./.venv/Scripts/python.exe __TRACKED_VAR__/edit.py __TRACKED_VAR__/take3 C:/Users/subha/Downloads/sp2py_app/demo_video)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\subha\\Downloads\\sp2py_app\\demo_video"
+    ]
+  }
+}

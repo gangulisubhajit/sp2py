@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="560" viewBox="0 0 1640 560" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b45309"/>
+    </marker>
+    <marker id="arrowIndigo" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4f46e5"/>
+    </marker>
+  </defs>
+
+  <rect width="1640" height="560" fill="#ffffff"/>
+
+  <text x="30" y="46" font-size="25" font-weight="600" fill="#0f172a">SQL-to-Python Automated Pipeline Architecture</text>
+  <text x="30" y="72" font-size="15" fill="#64748b">Legacy stored procedure &#8594; semantic extraction &#8594; schema-bound code generation &#8594; AST verification gate</text>
+
+  <!-- Stage 1 -->
+  <rect x="30" y="98" width="288" height="200" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="62" cy="130" r="15" fill="#4f46e5"/>
+  <text x="62" y="136" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="88" y="136" font-size="17" font-weight="650" fill="#0f172a">Source Procedure</text>
+  <text x="52" y="176" font-size="14" fill="#475569">&#8226; Legacy .sql input</text>
+  <text x="52" y="204" font-size="14" fill="#475569">&#8226; Dialect fingerprinting from</text>
+  <text x="64" y="226" font-size="14" fill="#475569">weighted syntax markers</text>
+  <text x="52" y="258" font-size="13" fill="#64748b">PL/SQL &#183; PL/pgSQL &#183; T-SQL</text>
+
+  <!-- Stage 2 -->
+  <rect x="352" y="98" width="288" height="200" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="384" cy="130" r="15" fill="#4f46e5"/>
+  <text x="384" y="136" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="410" y="136" font-size="17" font-weight="650" fill="#0f172a">Semantic Extraction</text>
+  <text x="374" y="176" font-size="14" fill="#475569">&#8226; Variable lifetimes</text>
+  <text x="374" y="204" font-size="14" fill="#475569">&#8226; Cursor loops &amp; control flow</text>
+  <text x="374" y="232" font-size="14" fill="#475569">&#8226; Commit / rollback points</text>
+  <text x="374" y="264" font-size="14" fill="#475569">&#8226; Exception intent</text>
+
+  <!-- Stage 3 -->
+  <rect x="674" y="98" width="288" height="200" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="706" cy="130" r="15" fill="#4f46e5"/>
+  <text x="706" y="136" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="732" y="136" font-size="17" font-weight="650" fill="#0f172a">Schema Binding</text>
+  <text x="696" y="176" font-size="14" fill="#475569">&#8226; Column inventory or DDL</text>
+  <text x="696" y="204" font-size="14" fill="#475569">&#8226; SQL &#8594; Python / Pydantic</text>
+  <text x="708" y="226" font-size="14" fill="#475569">type resolution</text>
+  <text x="696" y="258" font-size="13" fill="#64748b">Unknown widens, never narrows</text>
+
+  <!-- Stage 4 -->
+  <rect x="996" y="98" width="288" height="200" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="1028" cy="130" r="15" fill="#4f46e5"/>
+  <text x="1028" y="136" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="1054" y="136" font-size="17" font-weight="650" fill="#0f172a">Code Generation</text>
+  <text x="1018" y="176" font-size="14" fill="#475569">&#8226; FastAPI service function</text>
+  <text x="1018" y="204" font-size="14" fill="#475569">&#8226; SQLAlchemy session scope</text>
+  <text x="1018" y="232" font-size="14" fill="#475569">&#8226; Pydantic result schema</text>
+  <text x="1018" y="264" font-size="14" fill="#475569">&#8226; Inline # NOTE: assumptions</text>
+
+  <!-- Stage 5 : the gate -->
+  <rect x="1318" y="98" width="288" height="200" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="2.5"/>
+  <circle cx="1350" cy="130" r="15" fill="#4f46e5"/>
+  <text x="1350" y="136" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+  <text x="1376" y="136" font-size="17" font-weight="650" fill="#312e81">AST Verification Gate</text>
+  <text x="1340" y="176" font-size="14" fill="#3730a3">&#8226; ast.parse(module)</text>
+  <text x="1340" y="204" font-size="14" fill="#3730a3">&#8226; Failure &#8594; reject, regenerate</text>
+  <text x="1340" y="232" font-size="14" fill="#3730a3">&#8226; Style / docstring warnings</text>
+  <text x="1340" y="266" font-size="13.5" font-weight="600" fill="#4f46e5">Only parsed code exits</text>
+
+  <!-- Forward arrows -->
+  <line x1="322" y1="198" x2="346" y2="198" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="644" y1="198" x2="668" y2="198" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="966" y1="198" x2="990" y2="198" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1288" y1="198" x2="1312" y2="198" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Feedback loop 1: syntax failure returns to code generation.
+       Routed above the output box so nothing crosses it. -->
+  <path d="M 1360 298 L 1360 352 L 1140 352 L 1140 302" fill="none" stroke="#b45309" stroke-width="2" marker-end="url(#arrowAmber)"/>
+  <text x="1250" y="375" font-size="13.5" font-weight="600" fill="#b45309" text-anchor="middle">ast.parse fails &#8594; regenerate</text>
+
+  <!-- Output: exits from the right of stage 5, clear of the loop -->
+  <line x1="1520" y1="300" x2="1520" y2="389" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1318" y="395" width="288" height="52" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="1462" y="427" font-size="15" font-weight="600" fill="#065f46" text-anchor="middle">&#10003; Reviewable Python module</text>
+
+  <!-- Feedback loop 2: persisted reviewer corrections, entering stage 4
+       left of the syntax loop so the two never overlap. -->
+  <rect x="30" y="464" width="252" height="52" rx="10" fill="#ffffff" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="156" y="489" font-size="14" font-weight="600" fill="#3730a3" text-anchor="middle">Reviewer correction</text>
+  <text x="156" y="507" font-size="12" fill="#6366f1" text-anchor="middle">&#8220;always roll back on ...&#8221;</text>
+  <path d="M 282 490 L 1090 490 L 1090 302" fill="none" stroke="#4f46e5" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrowIndigo)"/>
+  <text x="686" y="481" font-size="13.5" font-weight="600" fill="#4f46e5" text-anchor="middle">persisted as a rule, applied to every later procedure</text>
+</svg>
